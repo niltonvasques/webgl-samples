@@ -110,7 +110,7 @@ function initBuffers() {
 	gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesColorBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-	sphere = buildSphere(4);
+	sphere = buildSphere(3, 3);
 
 	sphereVerticesBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, sphereVerticesBuffer);
@@ -120,17 +120,24 @@ function initBuffers() {
 
 // ********************************************************
 // ********************************************************
-function buildSphere(np){
+function buildSphere(np, np2){
 	var vPos = new Array;
 	var angle = np *  (Math.PI / 180.0);
+	var angle2 = np2 *  (Math.PI / 180.0);
 	var r = 1;
 	var numPontos = 0;
 
 	for(theta = 0.0; theta < 2*Math.PI; theta+=angle){
-		for(alfa = 0.0; alfa < Math.PI; alfa+=angle){
+		for(alfa = 0.0; alfa < Math.PI; alfa+=angle2){
+			var theta2 = randomFromInterval(2,0.6) * theta;
+			var alfa2 = randomFromInterval(2,0.6) * alfa;
+			var x = 0.0 + r * Math.cos(theta2) * Math.sin(alfa2);
+			var y = 0.0 + r * Math.sin(theta2) * Math.sin(alfa2);
+			var z = 0.0 + r * Math.cos(alfa2);
+	/*
 			var x = 0.0 + r * Math.cos(theta) * Math.sin(alfa);
 			var y = 0.0 + r * Math.sin(theta) * Math.sin(alfa);
-			var z = 0.0 + r * Math.cos(alfa);
+			var z = 0.0 + r * Math.cos(alfa);*/
 			vPos.push(x);
 			vPos.push(y);
 			vPos.push(z);
@@ -337,4 +344,10 @@ function mvRotate(angle, v) {
 
 	var m = Matrix.Rotation(inRadians, $V([v[0], v[1], v[2]])).ensure4x4();
 	multMatrix(m);
+}
+
+// UTILS
+
+function randomFromInterval(max, min){
+	return (Math.random()*(max-min)+min);
 }
