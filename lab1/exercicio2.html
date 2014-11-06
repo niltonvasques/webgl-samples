@@ -7,7 +7,7 @@
 
 <script type="text/javascript" src="sylvester.js"></script>
 <script type="text/javascript" src="glUtils.js"></script>
-<script type="text/javascript" src="exercicio1.js"></script>
+<script type="text/javascript" src="exercicio2.js"></script>
 
 <script id="shader-vs" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
@@ -16,12 +16,12 @@
 	uniform mat4 uMVMatrix;
 	uniform mat4 uPMatrix;
 
-	//varying lowp vec4 vColor;
+	varying lowp vec4 vColor;
 
 	void main(void) {
 		gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-		gl_PointSize = 3.0;
-		//vColor = aVertexColor;
+		gl_PointSize = 20.0;
+		vColor = aVertexColor;
 	}
 </script>
 
@@ -29,14 +29,18 @@
 	varying lowp vec4 vColor;
 
 	void main(void) {
-//		gl_FragColor = vColor;
-		gl_FragColor = 	vec4(1.0, 1.0, 1.0, 1.0);
+		gl_FragColor = vColor;
+		//gl_FragColor = 	vec4(1.0, 1.0, 1.0, 1.0);
 	}
 </script>
 
 
 </head>
 <body onload="start();">
+<h2>	Universidade Federal da Bahia<br>
+		MATA65 - Computação Gráfica<br>
+		Nilton Vasques<br>		
+		Exercício 2 - Esfera Colorida</h2>
 
     <canvas id="glcanvas" style="border: none;" width="800" height="800">
 	Your browser doesn't appear to support the HTML5 <code><canvas></code> element.

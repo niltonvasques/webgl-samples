@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>MATA65 - Computação Gráfica </title>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+	<script id="LuzDoSol-vs" type="x-shader/x-vertex">
+		attribute vec3 aVertexPosition;
+
+		uniform vec3 aVertexColor;
+		
+		varying vec4 vColor;
+
+		void main( void ) {
+	
+			gl_Position = vec4( aVertexPosition.xyz, 1.0 );
+			
+			vColor	= vec4( aVertexColor, 1.0 );
+		}	
+	</script>
+	<script id="LuzDoSol-fs" type="x-shader/x-fragment">
+		precision mediump float;
+		
+		varying vec4 vColor;
+		
+		void main( void ) {
+			gl_FragColor = vColor;
+		}	
+	</script>
+	
+	<script type="text/javascript" src="../lib/webgl-utils.js"></script>
+	<script type="text/javascript" src="../lib/cuon-matrix.js"></script>
+	<script type="text/javascript" src="../lib/shaders.js"></script>
+	<script type="text/javascript" src="../lib/myOBJParser.js"></script>
+	<script type="text/javascript" src="../lib/materialParser.js"></script>
+	<script type="text/javascript" src="../lib/ajax.js"></script>
+	<script type="text/javascript" src="luzdosol.js"></script>
+
+</head>
+<body>
+	<body onload="webGLStart();">
+		<h1>Laboratório 6</h1>
+		<h3>Exercício Luz do Sol</h3>
+		<p>Com base no codigo base dessa pagina coloque iluminacao nos planetas tal que:</p>
+		<p>1) Haja luz emanando da posicao do Sol;</p>
+		<p>2) A luz refletida do planeta Mercurio seja predominantemente difusa;</p>
+		<p>3) A luz refletida do planeta Terra possua componente especular;</p>
+		<p>4) A luz refletida da Lua seja fortemente difusa;</p>
+		<p>5) A luz que chega em Mercurio seja claramente mais forte que a luz que chega na Terra.</p>
+		<canvas id="canvas" style="border: none;" width="800" height="800"></canvas>
+	</body>
+</body>
+</html>

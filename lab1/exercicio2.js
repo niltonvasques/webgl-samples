@@ -1,21 +1,26 @@
-var canvas	= null;
-var gl		= null;
-//var shader 	= null;
-var vPosBuff	= null;
-var vPos	= new Array;
-var numPontos   = null;
+var canvas;
+var gl;
+var squareVerticesBuffer;
+var sphereVerticesBuffer;
+var squareVerticesColorBuffer;
 var mvMatrix;
-var perspectiveMatrix;
 var shaderProgram;
 var vertexPositionAttribute;
+var perspectiveMatrix;
+var sphere;
+var squareRotation = 0.0;
+var lastSquareUpdateTime = 0;
 
-// ********************************************************
-// ********************************************************
-function webGLStart() {
+//
+// start
+//
+// Called when the canvas is created to get the ball rolling.
+// Figuratively, that is. There's nothing moving in this demo.
+//
+function start() {
+	canvas = document.getElementById("glcanvas");
 
-	canvas = document.getElementById("esfera");
-
-	initGL(canvas);      // Initialize the GL context
+	initWebGL(canvas);      // Initialize the GL context
 
 	// Only continue if WebGL is available and working
 
@@ -30,7 +35,6 @@ function webGLStart() {
 
 		initShaders();
 
-
 		// Here's where we call the routine that builds all the objects
 		// we'll be drawing.
 
@@ -38,17 +42,17 @@ function webGLStart() {
 
 		// Set up to draw the scene periodically.
 
-	//	setInterval(drawScene, 15);
-		drawScene();
-	}	
-
+		setInterval(drawScene, 15);
+	}
 }
 
-
-
-// ********************************************************
-// ********************************************************
-function initGL() {
+//
+// initWebGL
+//
+// Initialize WebGL, returning the GL context or null if
+// WebGL isn't available or could not be initialized.
+//
+function initWebGL() {
 	gl = null;
 
 	try {
@@ -59,34 +63,28 @@ function initGL() {
 
 	if (!gl) {
 		alert("Unable to initialize WebGL. Your browser may not support it.");
-	}	
-}
-
-// ********************************************************
-// ********************************************************
-function buildSphere(np){
-	var angle = np *  (Math.PI / 180.0);
-	var r = 0.7;
-	numPontos = 0;
-
-	for(theta = 0.0; theta < 2*Math.PI; theta+=angle){
-		for(alfa = 0.0; alfa < Math.PI; alfa+=angle){
-			var x = 0.0 + r * Math.cos(theta) * Math.sin(alfa);
-			var y = 0.0 + r * Math.sin(theta) * Math.sin(alfa);
-			var z = 0.0 + r * Math.cos(alfa);
-			vPos.push(x);
-			vPos.push(y);
-			vPos.push(z);
-			numPontos++;
-		}
 	}
 }
-// ********************************************************
-// ********************************************************
-function initBuffers(){
-//	buildSphere(4);
 
-	vPosBuff = gl.createBuffer();
+//
+// initBuffers
+//
+// Initialize the buffers we'll need. For this demo, we just have
+// one object -- a simple two-dimensional square.
+//
+function initBuffers() {
+  
+	// Create a buffer for the square's vertices.
+
+	squareVerticesBuffer = gl.createBuffer();
+
+	// Select the squareVerticesBuffer as the one to apply vertex
+	// operations to from here out.
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
+
+	// Now create an array of vertices for the square. Note that the Z
+	// coordinate is always 0 here.
 
 	var vertices = [
 		1.0,  1.0,  0.0,
@@ -95,15 +93,65 @@ function initBuffers(){
 		-1.0, -1.0, 0.0
 	];
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, vPosBuff);
+	// Now pass the list of vertices into WebGL to build the shape. We
+	// do this by creating a Float32Array from the JavaScript array,
+	// then use it to fill the current vertex buffer.
 
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-	vPosBuff.itemSize = 3;
-	vPosBuff.numItems = numPontos; 	
+	var colors = [
+		1.0,  0.0,  0.0,  1.0,    // red
+		0.0,  1.0,  0.0,  1.0,    // green
+		0.0,  0.0,  1.0,  1.0     // blue
+	];
+
+	squareVerticesColorBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesColorBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+	sphere = buildSphere(10, 8);
+
+	sphereVerticesBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, sphereVerticesBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere), gl.STATIC_DRAW);
+
 }
+
 // ********************************************************
 // ********************************************************
+function buildSphere(np, np2){
+	var vPos = new Array;
+	var angle = np *  (Math.PI / 180.0);
+	var angle2 = np2 *  (Math.PI / 180.0);
+	var r = 1;
+	var numPontos = 0;
+
+	for(theta = 0.0; theta < 2*Math.PI; theta+=angle){
+		for(alfa = 0.3; alfa < Math.PI*0.8; alfa+=angle2){
+			var theta2 =  theta;
+			var alfa2 =  alfa;
+			var x = 0.0 + r * Math.cos(theta2) * Math.sin(alfa2);
+			var y = 0.0 + r * Math.sin(theta2) * Math.sin(alfa2);
+			var z = 0.0 + r * Math.cos(alfa2);
+	/*
+			var x = 0.0 + r * Math.cos(theta) * Math.sin(alfa);
+			var y = 0.0 + r * Math.sin(theta) * Math.sin(alfa);
+			var z = 0.0 + r * Math.cos(alfa);*/
+			vPos.push(x);
+			vPos.push(y);
+			vPos.push(z);
+			numPontos++;
+		}
+	}
+	vPos.numItems = numPontos;
+	return vPos;
+}
+
+//
+// drawScene
+//
+// Draw the scene.
+//
 function drawScene() {
 	// Clear the canvas before we start drawing on it.
 
@@ -114,7 +162,7 @@ function drawScene() {
 	// ratio of 640:480, and we only want to see objects between 0.1 units
 	// and 100 units away from the camera.
 
-	perspectiveMatrix = makePerspective(45, 640.0/480.0, 0.1, 100.0);
+	perspectiveMatrix = makePerspective(45, canvas.width/canvas.height, 0.1, 100.0);
 
 	// Set the drawing position to the "identity" point, which is
 	// the center of the scene.
@@ -124,19 +172,34 @@ function drawScene() {
 	// Now move the drawing position a bit to where we want to start
 	// drawing the square.
 
-	mvTranslate([-0.0, 0.0, -6.0]);
+	mvTranslate([-0.0, 0.0, -4.0]);
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, vPosBuff);
-	gl.vertexAttribPointer(vertexPositionAttribute, vPosBuff.itemSize, gl.FLOAT, false, 0, 0);
+	mvPushMatrix();
+	mvRotate(squareRotation, [1, 0, 1]);
+
+	// Draw the square by binding the array buffer to the square's vertices
+	// array, setting attributes, and pushing it to GL.
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, sphereVerticesBuffer);
+	gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, sphereVerticesBuffer);
+	gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
 
 	setMatrixUniforms();
+	gl.drawArrays(gl.POINTS, 0, sphere.numItems);
 
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+	mvPopMatrix();
 
-	
-	
+	var currentTime = (new Date).getTime();
+	if (lastSquareUpdateTime) {
+		var delta = currentTime - lastSquareUpdateTime;
+
+		squareRotation += (30 * delta) / 1000.0;
+	}
+
+	lastSquareUpdateTime = currentTime;
 }
-
 
 //
 // initShaders
@@ -165,8 +228,8 @@ function initShaders() {
 	vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
 	gl.enableVertexAttribArray(vertexPositionAttribute);
 
-//	vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
-//	gl.enableVertexAttribArray(vertexColorAttribute);
+	vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
+	gl.enableVertexAttribArray(vertexColorAttribute);
 }
 
 //
@@ -229,10 +292,9 @@ function getShader(gl, id) {
 	return shader;
 }
 
-
-//***************************************************
+//
 // Matrix utility functions
-//***************************************************
+//
 
 function loadIdentity() {
 	mvMatrix = Matrix.I(4);
@@ -281,4 +343,8 @@ function mvRotate(angle, v) {
 	multMatrix(m);
 }
 
+// UTILS
 
+function randomFromInterval(max, min){
+	return (Math.random()*(max-min)+min);
+}

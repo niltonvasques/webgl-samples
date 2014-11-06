@@ -1,0 +1,76 @@
+<html>
+
+<head>
+<title>MATA65 - Computacao Grafica</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<script id="Axis-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec4 aVertexColor;
+	
+	uniform mat4 uModelMat;
+		
+	varying vec4 vColor;
+		
+	void main(void) {
+		
+ 		gl_Position = uModelMat * vec4(aVertexPosition.xyz, 1.0);
+ 		
+		vColor = aVertexColor;
+	}
+
+</script>
+
+<script id="Axis-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	varying vec4 vColor;
+		
+	void main(void) {
+		gl_FragColor = vColor;
+	}
+</script>
+<script id="Planets-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	
+	uniform mat4 uModelMat;
+	uniform vec3 uColor;
+		
+	varying vec4 vColor;
+		
+	void main(void) {
+		
+ 		gl_Position = uModelMat * vec4(aVertexPosition.xyz, 1.0);
+ 		
+		vColor = vec4(uColor, 1.0);
+	}
+
+</script>
+
+<script id="Planets-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	varying vec4 vColor;
+		
+	void main(void) {
+		gl_FragColor = vColor;
+	}
+</script>
+
+<script type="text/javascript" src="../lib/webgl-utils.js"></script>
+<script type="text/javascript" src="../lib/cuon-matrix.js"></script>
+<script type="text/javascript" src="../lib/shaders.js"></script>
+<script type="text/javascript" src="../lib/myOBJParser.js"></script>
+<script type="text/javascript" src="../lib/materialParser.js"></script>
+<script type="text/javascript" src="Planets.js"></script>
+
+</head>
+
+<body onload="webGLStart();">
+    <h1>Laboratorio 3</h1>
+    <p>Transformacoes Geometricas - Sistema Planetario.</p>
+
+    <canvas id="Planets" style="border: none;" width="400" height="400"></canvas>
+</body>
+
+</html>

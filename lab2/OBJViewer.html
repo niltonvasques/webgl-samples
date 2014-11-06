@@ -1,0 +1,72 @@
+<html>
+
+<head>
+<title>MATA65 - Computacao Grafica</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<script id="viewOBJ-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec4 aVertexColor;
+	
+	varying vec4 vColor;
+
+	uniform mat4 uPMatrix;
+	uniform mat4 uMVMatrix;
+		
+	void main(void) {
+		
+ 		gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition.xyz, 1.0);
+ 		
+		vColor = aVertexColor;
+	}
+
+</script>
+
+<script id="viewOBJ-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	varying vec4 vColor;
+		
+	void main(void) {
+		gl_FragColor = vColor;
+	}
+</script>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	
+	//Uniform matrix that translate and rotate vertex.
+	uniform mat4 uMVMatrix;
+	uniform mat4 uPMatrix;
+
+	void main(void) {
+		gl_Position = uMVMatrix * uPMatrix * vec4(aVertexPosition, 1.0);
+	}
+</script>
+
+<script id="shader-fs" type="x-shader/x-fragment">
+
+	void main(void) {
+		gl_FragColor = 	vec4(1.0, 1.0, 1.0, 1.0);
+	}
+</script>
+
+
+<script type="text/javascript" src="../lib/webgl-utils.js"></script>
+<script type="text/javascript" src="../lib/cuon-matrix.js"></script>
+<script type="text/javascript" src="../lib/shaders.js"></script>
+<script type="text/javascript" src="../lib/myOBJParser.js"></script>
+<script type="text/javascript" src="../lib/materialParser.js"></script>
+<script type="text/javascript" src="OBJViewer.js"></script>
+
+</head>
+
+<body onload="webGLStart();">
+    <h1>Laboratorio 2</h1><br />
+    <p>Visualizacao de Modelos 3D em formato OBJ.</p>
+
+    <canvas id="viewOBJ" style="border: none;" width="800" height="800"></canvas>
+
+</body>
+
+</html>

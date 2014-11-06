@@ -1,0 +1,81 @@
+<html>
+
+<head>
+<title>MATA65 - Computacao Grafica</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<script id="Gouraud-vs" type="x-shader/x-vertex">
+	attribute vec3 aVPosition;
+	attribute vec3 aVNorm;
+	
+	uniform mat4 uModelMat;
+	uniform mat4 uViewMat;
+	uniform mat4 uProjMat;
+	uniform mat4 uNormMat;
+	
+	uniform vec3 uCamPos;
+	uniform vec3 uLPos;
+	uniform vec4 uLColor;
+	uniform vec4 uMatAmb;
+	uniform vec4 uMatDif;
+	uniform vec4 uMatSpec;
+		
+	varying vec4 vColor;
+		
+	void main(void) {
+		
+ 		gl_Position = uProjMat * uViewMat * uModelMat * vec4(aVPosition.xyz, 1.0);
+ 		
+ 		vec3 vPosW = (uModelMat * vec4(aVPosition, 1.0)).xyz;
+		
+		vec3 vNormal = normalize(vec3(uNormMat * vec4(aVNorm, 1.0)));
+		
+		vec4 ambient = vec4(uLColor.rgb * uMatAmb.rgb, uMatAmb.a);
+	
+		vec3 vL = normalize(uLPos - vPosW);
+		float teta = max(dot(vL, vNormal), 0.0);
+				
+		vec4 diffuse = vec4(uLColor.rgb * uMatDif.rgb * teta, uMatDif.a);	
+
+		vec3 vV = normalize(uCamPos - vPosW);
+		vec3 vR = normalize(reflect(-vL, vNormal));
+		float omega = max(dot(vV, vR), 0.0);
+		vec4 specular = vec4(uLColor.rgb * uMatSpec.rgb * pow(omega,20.0), uMatSpec.a);
+		
+		vColor = clamp(ambient + diffuse + specular, 0.0, 1.0);
+	}
+
+</script>
+
+<script id="Gouraud-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	varying vec4 vColor;
+		
+	
+	void main(void) {
+		
+		gl_FragColor = vColor;
+	}
+</script>
+
+<script type="text/javascript" src="../lib/webgl-utils.js"></script>
+<script type="text/javascript" src="../lib/cuon-matrix.js"></script>
+<script type="text/javascript" src="../lib/shaders.js"></script>
+<script type="text/javascript" src="../lib/myOBJParser.js"></script>
+<script type="text/javascript" src="../lib/materialParser.js"></script>
+<script type="text/javascript" src="GouraudMaterial.js"></script>
+
+</head>
+
+<body onload="webGLStart();">
+    <h1>Laboratorio CG</h1><br />
+    <p>Visualizacao de Modelos 3D em formato OBJ com calculo de iluminacao e material.</p>
+    <p>Algoritmo de Gouraud, com material.</p>
+
+
+    <canvas id="GouraudMaterial" style="border: none;" width="400" height="400"></canvas>
+
+</body>
+
+</html>

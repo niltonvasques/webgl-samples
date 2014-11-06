@@ -1,0 +1,61 @@
+<html>
+
+<head>
+<title>MATA65 - Computacao Grafica</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<script id="TransfGeom-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec4 aVertexColor;
+	
+	uniform mat4 uModelMat;
+		
+	varying vec4 vColor;
+		
+	void main(void) {
+		
+ 		gl_Position = uModelMat * vec4(aVertexPosition.xyz, 1.0);
+ 		
+		vColor = aVertexColor;
+	}
+
+</script>
+
+<script id="TransfGeom-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	varying vec4 vColor;
+		
+	void main(void) {
+		gl_FragColor = vColor;
+	}
+</script>
+
+<script type="text/javascript" src="../lib/webgl-utils.js"></script>
+<script type="text/javascript" src="../lib/cuon-matrix.js"></script>
+<script type="text/javascript" src="../lib/shaders.js"></script>
+<script type="text/javascript" src="../lib/myOBJParser.js"></script>
+<script type="text/javascript" src="../lib/materialParser.js"></script>
+<script type="text/javascript" src="TransfGeom.js"></script>
+
+</head>
+
+<body onload="webGLStart();">
+    <h1>Laboratorio 3</h1>
+    <p>Transformacoes Geometricas.</p>
+
+    <canvas id="TransfGeom" style="border: none;" width="400" height="400"></canvas>
+    <br/><br/>
+    <div id="outRotX">Rotacao X = </div>
+    <input type="range" id="RotX" min="-180.0" max="180.0" step="2.0" value="0.0" oninput="changeRotX(this.value)">
+    <br/><br/>
+    <div id="outRotY">Rotacao Y = </div>
+    <input type="range" id="RotY" min="-180.0" max="180.0" step="2.0" value="0.0" oninput="changeRotY(this.value)">
+    <br/><br/>
+    <div id="outRotZ">Rotacao Z = </div>
+    <input type="range" id="RotZ" min="-180.0" max="180.0" step="2.0" value="0.0" oninput="changeRotZ(this.value)">
+    <br/><br/>
+	<input type="button" name="Reset" value="Reset" onclick="resetTransfGeom()">
+</body>
+
+</html>
