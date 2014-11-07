@@ -21,6 +21,7 @@ var FOVy		= 75.0;
 var RotSun		= 0.0;
 var RotMoon		= 0.0;	
 var RotEarth 		= 0.0;
+var RotMercury 		= 0.0;
 var transEarth		= 0.5;
 var deltaTrans		= 0.01;
 
@@ -43,7 +44,7 @@ var color	= new Float32Array(3);
 function initGL( canvas ) {
 	
 	// Try to grab the standard context. If it fails, fallback to experimental.
-    	gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    	gl = canvas.getContext("experimental-webgl2") || canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 	if( !gl ) {
 		alert( "Could not initialize WebGL, sorry :(!" );
 		return gl;
@@ -176,6 +177,9 @@ function drawScene( ) {
 
 		//Desenha Lua
 		drawMoon( );		
+
+		//Desenha Mercúrio
+		drawMercury( );
 	}catch( err ){
 		alert( err );
 		console.log( err.description );
@@ -234,7 +238,7 @@ function drawSun( ){
 	matSpec.elements[2] = 0.0;
 	matSpec.elements[3] = 1.0;
 
-	NS	= 100.0;
+	Ns	= 100.0;
 	
 	drawShaderTerra( );
 }
@@ -244,7 +248,7 @@ function drawEarth( ){
 
 	//Desenha Terra
 	modelMat.setIdentity();
-	modelMat.scale( 0.4, 0.4, 0.4 );
+	modelMat.scale( 0.5, 0.5, 0.5 );
 	modelMat.rotate( RotEarth, 0, 1, 0 );
 	modelMat.translate( 2, 0, 0 );
 
@@ -272,16 +276,17 @@ function drawEarth( ){
 	matSpec.elements[2] = 0.7;
 	matSpec.elements[3] = 1.0;
 
-	NS	= 100.0;
+	Ns	= 10.0;
 
 	drawShaderTerra( );
 }
+
 
 function drawMoon( ){
 
 	modelMat.rotate( RotMoon, 0, 1, 0 );
 	modelMat.translate( 0.6, 0, 0 );
-	modelMat.scale( 0.5, 0.5, 0.5 );
+	modelMat.scale( 0.3, 0.3, 0.3 );
 
 	normMat.setIdentity();
 	normMat.setInverseOf( modelMat );
@@ -307,8 +312,45 @@ function drawMoon( ){
 	matSpec.elements[2] = 0.1;
 	matSpec.elements[3] = 1.0;
 
-	NS	= 100.0;
+	Ns	= 100.0;
 	
+	drawShaderTerra( );
+}
+
+function drawMercury( ){
+
+
+	modelMat.setIdentity();
+	modelMat.scale( 0.2, 0.2, 0.2 );
+	modelMat.rotate( RotMercury, 0, 1, 0 );
+	modelMat.translate( 2.0, 0, 0 );
+
+	normMat.setIdentity();
+	normMat.setInverseOf( modelMat );
+	normMat.transpose();
+
+	lightColor.elements[0] = 0.4;
+	lightColor.elements[1] = 0.0;
+	lightColor.elements[2] = 0.0;
+	lightColor.elements[3] = 1.0;
+
+	matAmb.elements[0] = 0.1;
+	matAmb.elements[1] = 0.1;
+	matAmb.elements[2] = 0.1;
+	matAmb.elements[3] = 1.0;
+
+	matDif.elements[0] = 1.0;
+	matDif.elements[1] = 1.0;
+	matDif.elements[2] = 1.0;
+	matDif.elements[3] = 1.0;
+
+	matSpec.elements[0] = 0.2;
+	matSpec.elements[1] = 0.2;
+	matSpec.elements[2] = 0.2;
+	matSpec.elements[3] = 1.0;
+
+	NS	= 100.0;
+
 	drawShaderTerra( );
 }
 
@@ -322,8 +364,9 @@ function animate() {
 	else
 		if (transEarth < 0.5)
 			deltaTrans *= -1.0; 
-	RotEarth += 0.2;
+	RotEarth += 0.4;
 	RotMoon += 1;
+	RotMercury += 0.7;
 	drawScene(); 
 }
 

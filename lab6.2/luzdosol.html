@@ -47,16 +47,23 @@
 			vec3 vL 	= normalize( uLPos - vPosW );
 			
 			float teta 	= max( dot( vL, vNormal ), 0.0 );
-			
-			vec4 diffuse	= uLColor * uMatDif * teta;
+
+			// Calculado a distância entre a luz e o vértice
+			float d		= distance( vPosW, uLPos );
+			//A luz difusa é então multiplicada pelo inverso da distância
+			vec4 nMatDif	= uMatDif * 1.0 / d;
+			vec4 nMatSpec	= uMatSpec * 1.0 / d;
+
+			vec4 diffuse	= uLColor * nMatDif * teta;
 			
 			vec3 vV 	= normalize( uCamPos - vPosW );
 			vec3 vR		= normalize( reflect( -vL, vNormal ) );
 
+
 			float omega	= max( dot( vV, vR ), 0.0 );
-			vec4 specular	= uLColor * uMatSpec * pow( omega, uExpSpec );
+			vec4 specular	= uLColor * nMatSpec * pow( omega, uExpSpec );
 			
-			gl_FragColor 	= ambient + diffuse + specular;
+			gl_FragColor 	= ( ambient + diffuse + specular ) ;
 		}	
 	</script>
 	
