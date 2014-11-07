@@ -25,6 +25,20 @@ var RotEarth 		= 0.0;
 var transEarth		= 0.5;
 var deltaTrans		= 0.01;
 
+//	REFLECT LIGHT ATTRS
+var modelMat	= new Matrix4();
+var viewMat	= new Matrix4();
+var projMat	= new Matrix4();
+var normMat	= new Matrix4();
+
+var lightColor	= new Vector4();
+var matAmb	= new Vector4();
+var matDif	= new Vector4();
+var matSpec	= new Vector4();
+var Ns		= 100.0;
+var rotEarth	= new Matrix4();
+var color	= new Float32Array(3);
+
 
 
 function initGL( canvas ) {
@@ -76,7 +90,7 @@ function webGLStart( ){
 	}
 
 
-	shaderTerra = initShaders( "terra", gl );
+	shaderTerra 			= initShaders( "terra", gl );
 	shaderTerra.aVertexPosition 	= gl.getAttribLocation( shaderTerra, "aVertexPosition" );
 	shaderTerra.aVNorm		= gl.getAttribLocation( shaderTerra, "aVNorm" );
 
@@ -85,11 +99,13 @@ function webGLStart( ){
 	shaderTerra.uProjMat		= gl.getUniformLocation( shaderTerra, "uProjMat" );
 	shaderTerra.uNormMat		= gl.getUniformLocation( shaderTerra, "uNormMat" );
 
-
 	shaderTerra.uCamPos		= gl.getUniformLocation( shaderTerra, "uCamPos" );
 	shaderTerra.uLPos		= gl.getUniformLocation( shaderTerra, "uLPos" );
 	shaderTerra.uLColor		= gl.getUniformLocation( shaderTerra, "uLColor" );
+	shaderTerra.uMatAmb		= gl.getUniformLocation( shaderTerra, "uMatAmb" );
+	shaderTerra.uMatDif		= gl.getUniformLocation( shaderTerra, "uMatDif" );
 	shaderTerra.uMatSpec		= gl.getUniformLocation( shaderTerra, "uMatSpec" );
+	shaderTerra.uExpSpec		= gl.getUniformLocation( shaderTerra, "uExpSpec" );
 
 	if( !shaderTerra ) {
 		alert( "Could not initialize shader Terra" );
@@ -99,7 +115,9 @@ function webGLStart( ){
 		}
  		if( !shaderTerra.uModelMat || !shaderTerra.uProjMat || !shaderTerra.uNormMat
 			|| !shaderTerra.uCamPos  || !shaderTerra.uLPos
-			|| !shaderTerra.uLColor  || !shaderTerra.uMatSpec ){
+			|| !shaderTerra.uLColor  || !shaderTerra.uMatSpec 
+			|| !shaderTerra.uMatAmb  || !shaderTerra.uMatDif
+			|| !shaderTerra.uExpSpec ){
 			alert( "ERROR: getUniformLocation shaderTerra" );
 		}
 	}
@@ -151,30 +169,12 @@ function webGLStart( ){
 
 function drawScene( ) {
 
-	var modelMat	= new Matrix4();
-	var viewMat	= new Matrix4();
-	var projMat	= new Matrix4();
-	var normMat	= new Matrix4();
-	
-	var lightColor	= new Vector4();
-	var matAmb	= new Vector4();
-	var matDif	= new Vector4();
-	var matSpec	= new Vector4();
 
-	var rotEarth	= new Matrix4();
-	var color	= new Float32Array(3);
 
 	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight );
 
-	try{
-		gl.useProgram( shaderLuzdoSol );
-
-	}catch( err ){
-		alert( err );
-		console.log( err.description );
-	}
 
 	modelMat.setIdentity();
 	viewMat.setIdentity();
@@ -198,18 +198,89 @@ function drawScene( ) {
 
 	projMat.setPerspective( FOVy, gl.viewportWidth / gl.viewportHeight, 0.1, 25.0 );
 	
+	
+	lightPos.elements[0]	= 0.0;
+	lightPos.elements[1]	= 0.0;
+	lightPos.elements[2]	= 0.0;
+ 
+	 //Desenha Sol              
+	drawSun( );
 
-	//Desenha Sol
+	//Desenha Terra
+	
+	drawEarth( );
+
+	//Desenha Lua
+	drawMoon( );		
+}
+
+function drawCosmicBody( modelMat, viewMat, projMat, shader ){
+	gl.uniformMatrix4fv( shader.uModelMat, false, modelMat.elements );	
+	gl.uniformMatrix4fv( shader.uViewMat, false, viewMat.elements );
+	gl.uniformMatrix4fv( shader.uProjMat, false, projMat.elements );
+
+	
+	for( var o = 0; o < model.length; o++ ){
+		draw( model[o], shader, gl.TRIANGLES );
+	}
+	
+}
+
+function drawSun( ){
+
 	modelMat.setScale( 0.8, 0.8, 0.8 );
+	// Quando remove essa linha a luz some, não sei por que	
+	drawCosmicBody( modelMat, viewMat, projMat, shaderLuzdoSol );		
 
-	color[0] = 1.0;
-	color[1] = 1.0;
-	color[2] = 0.0;
+	try{
+		gl.useProgram( shaderTerra );
 
-	gl.uniform3fv( shaderLuzdoSol.uLightPos, lightPos.elements );
-	gl.uniform3fv( shaderLuzdoSol.aVertexColor, color );
+	}catch( err ){
+		alert( err );
+		console.log( err.description );
+	}
 
-	drawCosmicBody( modelMat, viewMat, projMat, color, shaderLuzdoSol );		
+	normMat.setIdentity();
+	normMat.setInverseOf( modelMat );
+	normMat.transpose();
+
+	lightColor.elements[0] = 1.0;
+	lightColor.elements[1] = 1.0;
+	lightColor.elements[2] = 0.0;
+	lightColor.elements[3] = 1.0;
+
+	matAmb.elements[0] = 0.7;
+	matAmb.elements[1] = 0.7;
+	matAmb.elements[2] = 0.7;
+	matAmb.elements[3] = 1.0;
+
+	matDif.elements[0] = 0.8;
+	matDif.elements[1] = 0.8;
+	matDif.elements[2] = 0.8;
+	matDif.elements[3] = 1.0;
+
+	matSpec.elements[0] = 0.0;
+	matSpec.elements[1] = 0.0;
+	matSpec.elements[2] = 0.0;
+	matSpec.elements[3] = 1.0;
+
+	NS	= 100.0;
+
+	gl.uniformMatrix4fv( shaderTerra.uNormMat, false, normMat.elements );
+
+	gl.uniform3fv( shaderTerra.uCamPos, cameraPos.elements );
+	gl.uniform4fv( shaderTerra.uLColor, lightColor.elements );
+	gl.uniform3fv( shaderTerra.uLPos, lightPos.elements );
+	
+	gl.uniform4fv( shaderTerra.uMatSpec, matSpec.elements );
+	gl.uniform4fv( shaderTerra.uMatAmb, matAmb.elements );
+	gl.uniform4fv( shaderTerra.uMatDif, matDif.elements );
+	gl.uniform1f( shaderTerra.uExpSpec, Ns );
+	
+	drawCosmicBody( modelMat, viewMat, projMat, shaderTerra );		
+}
+
+function drawEarth( ){
 
 	try{
 		gl.useProgram( shaderTerra );
@@ -229,25 +300,27 @@ function drawScene( ) {
 	normMat.setInverseOf( modelMat );
 	normMat.transpose();
 
-	lightColor.elements[0] = 1.0;
-	lightColor.elements[1] = 1.0;
-	lightColor.elements[2] = 1.0;
+	lightColor.elements[0] = 0.2;
+	lightColor.elements[1] = 0.2;
+	lightColor.elements[2] = 0.8;
 	lightColor.elements[3] = 1.0;
 
-	matAmb.elements[0] = 0.2;
-	matAmb.elements[1] = 0.2;
-	matAmb.elements[2] = 0.2;
+	matAmb.elements[0] = 0.1;
+	matAmb.elements[1] = 0.1;
+	matAmb.elements[2] = 0.1;
 	matAmb.elements[3] = 1.0;
 
-	matDif.elements[0] = 0.5;
-	matDif.elements[1] = 0.0;
-	matDif.elements[2] = 0.0;
+	matDif.elements[0] = 0.8;
+	matDif.elements[1] = 0.8;
+	matDif.elements[2] = 0.8;
 	matDif.elements[3] = 1.0;
 
-	matSpec.elements[0] = 1.0;
-	matSpec.elements[1] = 1.0;
-	matSpec.elements[2] = 1.0;
+	matSpec.elements[0] = 0.4;
+	matSpec.elements[1] = 0.4;
+	matSpec.elements[2] = 0.4;
 	matSpec.elements[3] = 1.0;
+
+	NS	= 100.0;
 
 	color[0] = 0.2;
 	color[1] = 0.2;
@@ -260,34 +333,58 @@ function drawScene( ) {
 	gl.uniform3fv( shaderTerra.uLPos, lightPos.elements );
 	
 	gl.uniform4fv( shaderTerra.uMatSpec, matSpec.elements );
+	gl.uniform4fv( shaderTerra.uMatAmb, matAmb.elements );
+	gl.uniform4fv( shaderTerra.uMatDif, matDif.elements );
+	gl.uniform1f( shaderTerra.uExpSpec, Ns );
 	
-	drawCosmicBody( modelMat, viewMat, projMat, color, shaderTerra );		
+	drawCosmicBody( modelMat, viewMat, projMat, shaderTerra );		
+}
 
-	//Desenha Lua
+function drawMoon( ){
+
 	modelMat.rotate( RotMoon, 0, 1, 0 );
 	modelMat.translate( 0.6, 0, 0 );
 	modelMat.scale( 0.5, 0.5, 0.5 );
 
-	color[0] = 0.5;
-	color[1] = 0.5;
-	color[2] = 0.5;
+	normMat.setIdentity();
+	normMat.setInverseOf( modelMat );
+	normMat.transpose();
+
+	lightColor.elements[0] = 0.7;
+	lightColor.elements[1] = 0.7;
+	lightColor.elements[2] = 0.7;
+	lightColor.elements[3] = 1.0;
+
+	matAmb.elements[0] = 0.04;
+	matAmb.elements[1] = 0.04;
+	matAmb.elements[2] = 0.04;
+	matAmb.elements[3] = 1.0;
+
+	matDif.elements[0] = 1.0;
+	matDif.elements[1] = 1.0;
+	matDif.elements[2] = 1.0;
+	matDif.elements[3] = 1.0;
+
+	matSpec.elements[0] = 0.4;
+	matSpec.elements[1] = 0.4;
+	matSpec.elements[2] = 0.4;
+	matSpec.elements[3] = 1.0;
+
+	NS	= 100.0;
 	
-	drawCosmicBody( modelMat, viewMat, projMat, color, shaderTerra );		
-		
+	gl.uniformMatrix4fv( shaderTerra.uNormMat, false, normMat.elements );
+
+	gl.uniform3fv( shaderTerra.uCamPos, cameraPos.elements );
+	gl.uniform4fv( shaderTerra.uLColor, lightColor.elements );
+	gl.uniform3fv( shaderTerra.uLPos, lightPos.elements );
+	
+	gl.uniform4fv( shaderTerra.uMatSpec, matSpec.elements );
+	gl.uniform4fv( shaderTerra.uMatAmb, matAmb.elements );
+	gl.uniform4fv( shaderTerra.uMatDif, matDif.elements );
+	gl.uniform1f( shaderTerra.uExpSpec, Ns );
+
+	drawCosmicBody( modelMat, viewMat, projMat, shaderTerra );		
 }
-
-function drawCosmicBody( modelMat, viewMat, projMat, color, shader ){
-	gl.uniformMatrix4fv( shader.uModelMat, false, modelMat.elements );	
-	gl.uniformMatrix4fv( shader.uViewMat, false, viewMat.elements );
-	gl.uniformMatrix4fv( shader.uProjMat, false, projMat.elements );
-
-	
-	for( var o = 0; o < model.length; o++ ){
-		draw( model[o], shader, gl.TRIANGLES );
-	}
-	
-}
-
 
 // ********************************************************
 // ********************************************************

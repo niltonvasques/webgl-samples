@@ -8,10 +8,12 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +267 lab6.2/luzdosol.js
-badd +1 lab6/Especular.js
+badd +324 lab6.2/luzdosol.js
+badd +344 lab6/Especular.js
 badd +2 lab6/Especular.html
-badd +53 lab6.2/luzdosol.html
+badd +73 lab6.2/luzdosol.html
+badd +1 lab6/PhongMaterial.html
+badd +1 lab6/PhongMaterial.js
 argglobal
 silent! argdel *
 argadd lab6.2/luzdosol.js
@@ -37,15 +39,15 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 252 - ((27 * winheight(0) + 28) / 56)
+let s:l = 267 - ((29 * winheight(0) + 28) / 56)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-252
-normal! 058|
+267
+normal! 037|
 wincmd w
 argglobal
-edit lab6/Especular.js
+edit lab6/PhongMaterial.js
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -55,11 +57,11 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 344 - ((55 * winheight(0) + 28) / 56)
+let s:l = 459 - ((27 * winheight(0) + 28) / 56)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-344
+459
 normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 105 + 105) / 211)
