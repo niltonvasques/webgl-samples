@@ -11,9 +11,10 @@ set shortmess=aoO
 badd +324 lab6.2/luzdosol.js
 badd +344 lab6/Especular.js
 badd +2 lab6/Especular.html
-badd +73 lab6.2/luzdosol.html
+badd +8 lab6.2/luzdosol.html
 badd +1 lab6/PhongMaterial.html
 badd +331 lab6/PhongMaterial.js
+badd +83 lib/shaders.js
 argglobal
 silent! argdel *
 argadd lab6.2/luzdosol.js
@@ -39,15 +40,15 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 158 - ((40 * winheight(0) + 28) / 56)
+let s:l = 58 - ((30 * winheight(0) + 28) / 56)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-158
-normal! 035|
+58
+normal! 023|
 wincmd w
 argglobal
-edit lab6.2/luzdosol.html
+edit lab6.2/luzdosol.js
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -57,13 +58,14 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 117 - ((53 * winheight(0) + 28) / 56)
+let s:l = 1 - ((0 * winheight(0) + 28) / 56)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-117
-normal! 07|
+1
+normal! 0
 wincmd w
+2wincmd w
 exe 'vert 1resize ' . ((&columns * 105 + 105) / 211)
 exe 'vert 2resize ' . ((&columns * 105 + 105) / 211)
 tabnext 1

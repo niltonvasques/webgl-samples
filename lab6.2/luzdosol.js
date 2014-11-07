@@ -1,7 +1,6 @@
 var gl			= null;
 var canvas		= null;
 var shaderTerra		= null;
-var shaderLuzdoSol	= null;
 
 // MODEL VARIABLES
 var obj_file	= "sphere.obj";
@@ -43,7 +42,8 @@ var color	= new Float32Array(3);
 
 function initGL( canvas ) {
 	
-	gl = canvas.getContext( "webgl" );
+	// Try to grab the standard context. If it fails, fallback to experimental.
+    	gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 	if( !gl ) {
 		alert( "Could not initialize WebGL, sorry :(!" );
 		return gl;
@@ -61,35 +61,8 @@ function webGLStart( ){
 	canvas =  document.getElementById( "canvas" );
 	gl 	= initGL( canvas );
 
-	shaderLuzdoSol = initShaders( "LuzDoSol", gl );
-        shaderLuzdoSol.aVertexPosition  = gl.getAttribLocation( shaderLuzdoSol, "aVertexPosition" );
-        shaderLuzdoSol.aVNorm           = gl.getAttribLocation( shaderLuzdoSol, "aVNorm" );
-        shaderLuzdoSol.aVertexColor     = gl.getUniformLocation( shaderLuzdoSol, "aVertexColor" );
-        shaderLuzdoSol.uModelMat        = gl.getUniformLocation( shaderLuzdoSol, "uModelMat" );
-        shaderLuzdoSol.uViewMat         = gl.getUniformLocation( shaderLuzdoSol, "uViewMat" );
-        shaderLuzdoSol.uProjMat         = gl.getUniformLocation( shaderLuzdoSol, "uProjMat" );
-
-        if( !shaderLuzdoSol ) {
-                alert( "Could not initialize shader LuzDoSol" );
-        }else{
-                if( shaderLuzdoSol.aVertexPosition < 0 ){
-                        alert( "ERROR: getAttribLocation shaderLuzdoSol" );
-                }
-                if( !shaderLuzdoSol.aVertexColor || !shaderLuzdoSol.uModelMat
-                        || !shaderLuzdoSol.uProjMat ){
-                        alert( "ERROR: getUniformLocation shaderLuzdoSol" );
-                }
-        }
-
-        shaderLuzdoSol.uLightPos        = gl.getUniformLocation( shaderLuzdoSol, "uLightPos" );
-
-        if( !shaderLuzdoSol ){
-                if( !shaderLuzdoSol.uLightPos ){
-                        alert(" ERROR: getUniformLocation ");
-                }
-        }
-
 	shaderTerra 			= initShaders( "terra", gl );
+
 	shaderTerra.aVertexPosition 	= gl.getAttribLocation( shaderTerra, "aVertexPosition" );
 	shaderTerra.aVNorm		= gl.getAttribLocation( shaderTerra, "aVNorm" );
 
@@ -158,21 +131,14 @@ function webGLStart( ){
 
 function drawScene( ) {
 
+// 	POG - SEM ESSA CHAMADA A ILUMINACAO NAO ESTA FUNCIONANDO
+	workaroundFixBindAttribZeroProblem( );
 
 	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight );
 
 
-// 	POG - SEM ESSA CHAMADA A ILUMINACAO NAO ESTA FUNCIONANDO
-	try{
-		gl.bindBuffer( gl.ARRAY_BUFFER, model[0].vertexBuffer );
-		gl.vertexAttribPointer( shaderLuzdoSol.aVertexPosition, 3, gl.FLOAT, false, 0, 0 );
-		gl.enableVertexAttribArray( shaderLuzdoSol.aVertexPosition );
-        }catch( err ){
-                alert( err );
-                console.log( err.description );
-        }
 
 	modelMat.setIdentity();
 	viewMat.setIdentity();
@@ -356,8 +322,8 @@ function animate() {
 	else
 		if (transEarth < 0.5)
 			deltaTrans *= -1.0; 
-	RotEarth += 2;
-	RotMoon += 5;
+	RotEarth += 0.2;
+	RotMoon += 1;
 	drawScene(); 
 }
 
@@ -426,8 +392,8 @@ function onReadComplete ( gl ) {
 function draw( o, shader, primitive ){
 	if( o.vertexBuffer != null ){
 		gl.bindBuffer( gl.ARRAY_BUFFER, o.vertexBuffer );
-		gl.vertexAttribPointer( shader.aVertexPosition, 3, gl.FLOAT, false, 0, 0 );
 		gl.enableVertexAttribArray( shader.aVertexPosition );
+		gl.vertexAttribPointer( shader.aVertexPosition, 3, gl.FLOAT, false, 0, 0 );
 	}else{
 		alert( "o.vertxBuffer == null" );
 		return;
@@ -464,3 +430,18 @@ function drawAxis(o, shaderProgram) {
 
 	gl.drawArrays(gl.LINES, 0, o.numItems);
 }
+
+// Basically, vertex attrib 0 has to be enabled or else OpenGL 
+// will not render where as OpenGL ES 2.0 will. 
+// https://www.khronos.org/webgl/public-mailing-list/archives/1005/msg00053.html
+function workaroundFixBindAttribZeroProblem(){
+	try{
+		gl.bindBuffer( gl.ARRAY_BUFFER, model[0].normalBuffer );
+		gl.vertexAttribPointer( 0, 3, gl.FLOAT, false, 0, 0 );
+		gl.enableVertexAttribArray( 0 );
+        }catch( err ){
+                alert( err );
+                console.log( err.description );
+        }
+}
+
