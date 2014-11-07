@@ -1,7 +1,7 @@
-var gl 		= null;
-var canvas	= null;
+var gl			= null;
+var canvas		= null;
 var shaderLuzdoSol 	= null;
-
+var shaderTerra		= null;
 
 // MODEL VARIABLES
 var obj_file	= "sphere.obj";
@@ -75,6 +75,43 @@ function webGLStart( ){
 		}
 	}
 
+
+	shaderTerra = initShaders( "terra", gl );
+	shaderTerra.aVertexPosition 	= gl.getAttribLocation( shaderTerra, "aVertexPosition" );
+	shaderTerra.aVNorm		= gl.getAttribLocation( shaderTerra, "aVNorm" );
+
+	shaderTerra.uModelMat		= gl.getUniformLocation( shaderTerra, "uModelMat" );
+	shaderTerra.uViewMat		= gl.getUniformLocation( shaderTerra, "uViewMat" );
+	shaderTerra.uProjMat		= gl.getUniformLocation( shaderTerra, "uProjMat" );
+	shaderTerra.uNormMat		= gl.getUniformLocation( shaderTerra, "uNormMat" );
+
+
+	shaderTerra.uCamPos		= gl.getUniformLocation( shaderTerra, "uCamPos" );
+	shaderTerra.uLPos		= gl.getUniformLocation( shaderTerra, "uLPos" );
+	shaderTerra.uLColor		= gl.getUniformLocation( shaderTerra, "uLColor" );
+	shaderTerra.uMatSpec		= gl.getUniformLocation( shaderTerra, "uMatSpec" );
+
+	if( !shaderTerra ) {
+		alert( "Could not initialize shader Terra" );
+	}else{
+ 		if( shaderTerra.aVertexPosition < 0 || shaderTerra.aVNorm < 0 ){
+			alert( "ERROR: getAttribLocation shaderTerra" );
+		}
+ 		if( !shaderTerra.uModelMat || !shaderTerra.uProjMat || !shaderTerra.uNormMat
+			|| !shaderTerra.uCamPos  || !shaderTerra.uLPos
+			|| !shaderTerra.uLColor  || !shaderTerra.uMatSpec ){
+			alert( "ERROR: getUniformLocation shaderTerra" );
+		}
+	}
+
+	shaderTerra.uLightPos 	= gl.getUniformLocation( shaderTerra, "uLightPos" );
+
+	if( !shaderTerra ){
+		if( !shaderTerra.uLightPos ){
+			alert(" ERROR: getUniformLocation ");
+		}
+	}
+
 	
 
 	
@@ -117,7 +154,13 @@ function drawScene( ) {
 	var modelMat	= new Matrix4();
 	var viewMat	= new Matrix4();
 	var projMat	= new Matrix4();
-	var mvpMat	= new Matrix4();
+	var normMat	= new Matrix4();
+	
+	var lightColor	= new Vector4();
+	var matAmb	= new Vector4();
+	var matDif	= new Vector4();
+	var matSpec	= new Vector4();
+
 	var rotEarth	= new Matrix4();
 	var color	= new Float32Array(3);
 
@@ -155,7 +198,6 @@ function drawScene( ) {
 
 	projMat.setPerspective( FOVy, gl.viewportWidth / gl.viewportHeight, 0.1, 25.0 );
 	
-	gl.uniform3fv( shaderLuzdoSol.uLightPos, lightPos.elements );
 
 	//Desenha Sol
 	modelMat.setScale( 0.8, 0.8, 0.8 );
@@ -164,7 +206,18 @@ function drawScene( ) {
 	color[1] = 1.0;
 	color[2] = 0.0;
 
-	drawCosmicBody( modelMat, viewMat, projMat, color );		
+	gl.uniform3fv( shaderLuzdoSol.uLightPos, lightPos.elements );
+	gl.uniform3fv( shaderLuzdoSol.aVertexColor, color );
+
+	drawCosmicBody( modelMat, viewMat, projMat, color, shaderLuzdoSol );		
+
+	try{
+		gl.useProgram( shaderTerra );
+
+	}catch( err ){
+		alert( err );
+		console.log( err.description );
+	}
 
 	//Desenha Terra
 	modelMat.setIdentity();
@@ -172,11 +225,43 @@ function drawScene( ) {
 	modelMat.rotate( RotEarth, 0, 1, 0 );
 	modelMat.translate( 2, 0, 0 );
 
+	normMat.setIdentity();
+	normMat.setInverseOf( modelMat );
+	normMat.transpose();
+
+	lightColor.elements[0] = 1.0;
+	lightColor.elements[1] = 1.0;
+	lightColor.elements[2] = 1.0;
+	lightColor.elements[3] = 1.0;
+
+	matAmb.elements[0] = 0.2;
+	matAmb.elements[1] = 0.2;
+	matAmb.elements[2] = 0.2;
+	matAmb.elements[3] = 1.0;
+
+	matDif.elements[0] = 0.5;
+	matDif.elements[1] = 0.0;
+	matDif.elements[2] = 0.0;
+	matDif.elements[3] = 1.0;
+
+	matSpec.elements[0] = 1.0;
+	matSpec.elements[1] = 1.0;
+	matSpec.elements[2] = 1.0;
+	matSpec.elements[3] = 1.0;
+
 	color[0] = 0.2;
 	color[1] = 0.2;
 	color[2] = 0.8;
+
+	gl.uniformMatrix4fv( shaderTerra.uNormMat, false, normMat.elements );
+
+	gl.uniform3fv( shaderTerra.uCamPos, cameraPos.elements );
+	gl.uniform4fv( shaderTerra.uLColor, lightColor.elements );
+	gl.uniform3fv( shaderTerra.uLPos, lightPos.elements );
 	
-	drawCosmicBody( modelMat, viewMat, projMat, color );		
+	gl.uniform4fv( shaderTerra.uMatSpec, matSpec.elements );
+	
+	drawCosmicBody( modelMat, viewMat, projMat, color, shaderTerra );		
 
 	//Desenha Lua
 	modelMat.rotate( RotMoon, 0, 1, 0 );
@@ -187,19 +272,18 @@ function drawScene( ) {
 	color[1] = 0.5;
 	color[2] = 0.5;
 	
-	drawCosmicBody( modelMat, viewMat, projMat, color );		
+	drawCosmicBody( modelMat, viewMat, projMat, color, shaderTerra );		
 		
 }
 
-function drawCosmicBody( model, view, proj, color ){
-	gl.uniformMatrix4fv( shaderLuzdoSol.uModelMat, false, model.elements );	
-	gl.uniformMatrix4fv( shaderLuzdoSol.uViewMat, false, view.elements );
-	gl.uniformMatrix4fv( shaderLuzdoSol.uProjMat, false, proj.elements );
+function drawCosmicBody( modelMat, viewMat, projMat, color, shader ){
+	gl.uniformMatrix4fv( shader.uModelMat, false, modelMat.elements );	
+	gl.uniformMatrix4fv( shader.uViewMat, false, viewMat.elements );
+	gl.uniformMatrix4fv( shader.uProjMat, false, projMat.elements );
 
-	gl.uniform3fv( shaderLuzdoSol.aVertexColor, color );
-
+	
 	for( var o = 0; o < model.length; o++ ){
-		draw( model[o], shaderLuzdoSol, gl.TRIANGLES );
+		draw( model[o], shader, gl.TRIANGLES );
 	}
 	
 }
