@@ -116,6 +116,9 @@ function webGLStart( ){
 			cameraUp.elements[0] 	= 0.0;
 			cameraUp.elements[1] 	= 1.0;
 			cameraUp.elements[2] 	= 0.0;
+
+		// 	POG - SEM ESSA CHAMADA A ILUMINACAO NAO ESTA FUNCIONANDO
+			workaroundFixBindAttribZeroProblem( );
 		}
 
 		if( model.length > 0 ){
@@ -132,8 +135,6 @@ function webGLStart( ){
 
 function drawScene( ) {
 
-// 	POG - SEM ESSA CHAMADA A ILUMINACAO NAO ESTA FUNCIONANDO
-	workaroundFixBindAttribZeroProblem( );
 
 	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 
@@ -212,7 +213,6 @@ function drawShaderTerra( ){
 function drawSun( ){
 
 	modelMat.setScale( 0.8, 0.8, 0.8 );
-	// Quando remove essa linha a luz some, não sei por que	
 
 	normMat.setIdentity();
 	normMat.setInverseOf( modelMat );
