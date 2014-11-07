@@ -1,7 +1,7 @@
 var gl			= null;
 var canvas		= null;
-var shaderLuzdoSol 	= null;
 var shaderTerra		= null;
+var shaderLuzdoSol	= null;
 
 // MODEL VARIABLES
 var obj_file	= "sphere.obj";
@@ -60,35 +60,34 @@ function webGLStart( ){
 	
 	canvas =  document.getElementById( "canvas" );
 	gl 	= initGL( canvas );
-	
+
 	shaderLuzdoSol = initShaders( "LuzDoSol", gl );
-	shaderLuzdoSol.aVertexPosition 	= gl.getAttribLocation( shaderLuzdoSol, "aVertexPosition" );
-	shaderLuzdoSol.aVNorm		= gl.getAttribLocation( shaderLuzdoSol, "aVNorm" );
-	shaderLuzdoSol.aVertexColor	= gl.getUniformLocation( shaderLuzdoSol, "aVertexColor" );
-	shaderLuzdoSol.uModelMat	= gl.getUniformLocation( shaderLuzdoSol, "uModelMat" );
-	shaderLuzdoSol.uViewMat		= gl.getUniformLocation( shaderLuzdoSol, "uViewMat" );
-	shaderLuzdoSol.uProjMat		= gl.getUniformLocation( shaderLuzdoSol, "uProjMat" );
+        shaderLuzdoSol.aVertexPosition  = gl.getAttribLocation( shaderLuzdoSol, "aVertexPosition" );
+        shaderLuzdoSol.aVNorm           = gl.getAttribLocation( shaderLuzdoSol, "aVNorm" );
+        shaderLuzdoSol.aVertexColor     = gl.getUniformLocation( shaderLuzdoSol, "aVertexColor" );
+        shaderLuzdoSol.uModelMat        = gl.getUniformLocation( shaderLuzdoSol, "uModelMat" );
+        shaderLuzdoSol.uViewMat         = gl.getUniformLocation( shaderLuzdoSol, "uViewMat" );
+        shaderLuzdoSol.uProjMat         = gl.getUniformLocation( shaderLuzdoSol, "uProjMat" );
 
-	if( !shaderLuzdoSol ) {
-		alert( "Could not initialize shader LuzDoSol" );
-	}else{
- 		if( shaderLuzdoSol.aVertexPosition < 0 ){
-			alert( "ERROR: getAttribLocation shaderLuzdoSol" );
-		}
- 		if( !shaderLuzdoSol.aVertexColor || !shaderLuzdoSol.uModelMat
-			|| !shaderLuzdoSol.uProjMat ){
-			alert( "ERROR: getUniformLocation shaderLuzdoSol" );
-		}
-	}
+        if( !shaderLuzdoSol ) {
+                alert( "Could not initialize shader LuzDoSol" );
+        }else{
+                if( shaderLuzdoSol.aVertexPosition < 0 ){
+                        alert( "ERROR: getAttribLocation shaderLuzdoSol" );
+                }
+                if( !shaderLuzdoSol.aVertexColor || !shaderLuzdoSol.uModelMat
+                        || !shaderLuzdoSol.uProjMat ){
+                        alert( "ERROR: getUniformLocation shaderLuzdoSol" );
+                }
+        }
 
-	shaderLuzdoSol.uLightPos 	= gl.getUniformLocation( shaderLuzdoSol, "uLightPos" );
+        shaderLuzdoSol.uLightPos        = gl.getUniformLocation( shaderLuzdoSol, "uLightPos" );
 
-	if( !shaderLuzdoSol ){
-		if( !shaderLuzdoSol.uLightPos ){
-			alert(" ERROR: getUniformLocation ");
-		}
-	}
-
+        if( !shaderLuzdoSol ){
+                if( !shaderLuzdoSol.uLightPos ){
+                        alert(" ERROR: getUniformLocation ");
+                }
+        }
 
 	shaderTerra 			= initShaders( "terra", gl );
 	shaderTerra.aVertexPosition 	= gl.getAttribLocation( shaderTerra, "aVertexPosition" );
@@ -122,17 +121,7 @@ function webGLStart( ){
 		}
 	}
 
-	shaderTerra.uLightPos 	= gl.getUniformLocation( shaderTerra, "uLightPos" );
 
-	if( !shaderTerra ){
-		if( !shaderTerra.uLightPos ){
-			alert(" ERROR: getUniformLocation ");
-		}
-	}
-
-	
-
-	
 	ajax( obj_file, function( responseText ){
 		onReadOBJFile( responseText, obj_file, gl, 1, true );
 	});
@@ -165,16 +154,25 @@ function webGLStart( ){
 	};
 	
 	tick( );
-	}
+}
 
 function drawScene( ) {
-
 
 
 	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight );
 
+
+// 	POG - SEM ESSA CHAMADA A ILUMINACAO NAO ESTA FUNCIONANDO
+	try{
+		gl.bindBuffer( gl.ARRAY_BUFFER, model[0].vertexBuffer );
+		gl.vertexAttribPointer( shaderLuzdoSol.aVertexPosition, 3, gl.FLOAT, false, 0, 0 );
+		gl.enableVertexAttribArray( shaderLuzdoSol.aVertexPosition );
+        }catch( err ){
+                alert( err );
+                console.log( err.description );
+        }
 
 	modelMat.setIdentity();
 	viewMat.setIdentity();
@@ -189,11 +187,7 @@ function drawScene( ) {
 		cameraLook.elements[2],
 		cameraUp.elements[0],
 		cameraUp.elements[1],
-		cameraUp.elements[2],
-		
-		lightPos.elements[0],
-		lightPos.elements[1],
-		lightPos.elements[2]
+		cameraUp.elements[2]
 	);
 
 	projMat.setPerspective( FOVy, gl.viewportWidth / gl.viewportHeight, 0.1, 25.0 );
@@ -202,43 +196,53 @@ function drawScene( ) {
 	lightPos.elements[0]	= 0.0;
 	lightPos.elements[1]	= 0.0;
 	lightPos.elements[2]	= 0.0;
+
+
+	try{
+		gl.useProgram( shaderTerra );
+
+		 //Desenha Sol              
+		drawSun( );
+
+		//Desenha Terra
+		
+		drawEarth( );
+
+		//Desenha Lua
+		drawMoon( );		
+	}catch( err ){
+		alert( err );
+		console.log( err.description );
+	}
  
-	 //Desenha Sol              
-	drawSun( );
-
-	//Desenha Terra
-	
-	drawEarth( );
-
-	//Desenha Lua
-	drawMoon( );		
 }
 
-function drawCosmicBody( modelMat, viewMat, projMat, shader ){
-	gl.uniformMatrix4fv( shader.uModelMat, false, modelMat.elements );	
-	gl.uniformMatrix4fv( shader.uViewMat, false, viewMat.elements );
-	gl.uniformMatrix4fv( shader.uProjMat, false, projMat.elements );
+function drawShaderTerra( ){
 
+	gl.uniformMatrix4fv( shaderTerra.uNormMat, false, normMat.elements );
+	gl.uniformMatrix4fv( shaderTerra.uModelMat, false, modelMat.elements );	
+	gl.uniformMatrix4fv( shaderTerra.uViewMat, false, viewMat.elements );
+	gl.uniformMatrix4fv( shaderTerra.uProjMat, false, projMat.elements );
+
+	gl.uniform3fv( shaderTerra.uCamPos, cameraPos.elements );
+	gl.uniform4fv( shaderTerra.uLColor, lightColor.elements );
+	gl.uniform3fv( shaderTerra.uLPos, lightPos.elements );
+	gl.uniform3fv( shaderTerra.uCamPos, cameraPos.elements );
+	
+	gl.uniform4fv( shaderTerra.uMatSpec, matSpec.elements );
+	gl.uniform4fv( shaderTerra.uMatAmb, matAmb.elements );
+	gl.uniform4fv( shaderTerra.uMatDif, matDif.elements );
+	gl.uniform1f( shaderTerra.uExpSpec, Ns );
 	
 	for( var o = 0; o < model.length; o++ ){
-		draw( model[o], shader, gl.TRIANGLES );
+		draw( model[o], shaderTerra, gl.TRIANGLES );
 	}
-	
 }
 
 function drawSun( ){
 
 	modelMat.setScale( 0.8, 0.8, 0.8 );
 	// Quando remove essa linha a luz some, não sei por que	
-	drawCosmicBody( modelMat, viewMat, projMat, shaderLuzdoSol );		
-
-	try{
-		gl.useProgram( shaderTerra );
-
-	}catch( err ){
-		alert( err );
-		console.log( err.description );
-	}
 
 	normMat.setIdentity();
 	normMat.setInverseOf( modelMat );
@@ -249,9 +253,9 @@ function drawSun( ){
 	lightColor.elements[2] = 0.0;
 	lightColor.elements[3] = 1.0;
 
-	matAmb.elements[0] = 0.7;
-	matAmb.elements[1] = 0.7;
-	matAmb.elements[2] = 0.7;
+	matAmb.elements[0] = 0.9;
+	matAmb.elements[1] = 0.9;
+	matAmb.elements[2] = 0.9;
 	matAmb.elements[3] = 1.0;
 
 	matDif.elements[0] = 0.8;
@@ -265,30 +269,12 @@ function drawSun( ){
 	matSpec.elements[3] = 1.0;
 
 	NS	= 100.0;
-
-	gl.uniformMatrix4fv( shaderTerra.uNormMat, false, normMat.elements );
-
-	gl.uniform3fv( shaderTerra.uCamPos, cameraPos.elements );
-	gl.uniform4fv( shaderTerra.uLColor, lightColor.elements );
-	gl.uniform3fv( shaderTerra.uLPos, lightPos.elements );
 	
-	gl.uniform4fv( shaderTerra.uMatSpec, matSpec.elements );
-	gl.uniform4fv( shaderTerra.uMatAmb, matAmb.elements );
-	gl.uniform4fv( shaderTerra.uMatDif, matDif.elements );
-	gl.uniform1f( shaderTerra.uExpSpec, Ns );
-	
-	drawCosmicBody( modelMat, viewMat, projMat, shaderTerra );		
+	drawShaderTerra( );
 }
 
 function drawEarth( ){
 
-	try{
-		gl.useProgram( shaderTerra );
-
-	}catch( err ){
-		alert( err );
-		console.log( err.description );
-	}
 
 	//Desenha Terra
 	modelMat.setIdentity();
@@ -315,29 +301,14 @@ function drawEarth( ){
 	matDif.elements[2] = 0.8;
 	matDif.elements[3] = 1.0;
 
-	matSpec.elements[0] = 0.4;
-	matSpec.elements[1] = 0.4;
-	matSpec.elements[2] = 0.4;
+	matSpec.elements[0] = 0.7;
+	matSpec.elements[1] = 0.7;
+	matSpec.elements[2] = 0.7;
 	matSpec.elements[3] = 1.0;
 
 	NS	= 100.0;
 
-	color[0] = 0.2;
-	color[1] = 0.2;
-	color[2] = 0.8;
-
-	gl.uniformMatrix4fv( shaderTerra.uNormMat, false, normMat.elements );
-
-	gl.uniform3fv( shaderTerra.uCamPos, cameraPos.elements );
-	gl.uniform4fv( shaderTerra.uLColor, lightColor.elements );
-	gl.uniform3fv( shaderTerra.uLPos, lightPos.elements );
-	
-	gl.uniform4fv( shaderTerra.uMatSpec, matSpec.elements );
-	gl.uniform4fv( shaderTerra.uMatAmb, matAmb.elements );
-	gl.uniform4fv( shaderTerra.uMatDif, matDif.elements );
-	gl.uniform1f( shaderTerra.uExpSpec, Ns );
-	
-	drawCosmicBody( modelMat, viewMat, projMat, shaderTerra );		
+	drawShaderTerra( );
 }
 
 function drawMoon( ){
@@ -365,25 +336,14 @@ function drawMoon( ){
 	matDif.elements[2] = 1.0;
 	matDif.elements[3] = 1.0;
 
-	matSpec.elements[0] = 0.4;
-	matSpec.elements[1] = 0.4;
-	matSpec.elements[2] = 0.4;
+	matSpec.elements[0] = 0.1;
+	matSpec.elements[1] = 0.1;
+	matSpec.elements[2] = 0.1;
 	matSpec.elements[3] = 1.0;
 
 	NS	= 100.0;
 	
-	gl.uniformMatrix4fv( shaderTerra.uNormMat, false, normMat.elements );
-
-	gl.uniform3fv( shaderTerra.uCamPos, cameraPos.elements );
-	gl.uniform4fv( shaderTerra.uLColor, lightColor.elements );
-	gl.uniform3fv( shaderTerra.uLPos, lightPos.elements );
-	
-	gl.uniform4fv( shaderTerra.uMatSpec, matSpec.elements );
-	gl.uniform4fv( shaderTerra.uMatAmb, matAmb.elements );
-	gl.uniform4fv( shaderTerra.uMatDif, matDif.elements );
-	gl.uniform1f( shaderTerra.uExpSpec, Ns );
-
-	drawCosmicBody( modelMat, viewMat, projMat, shaderTerra );		
+	drawShaderTerra( );
 }
 
 // ********************************************************

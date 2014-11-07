@@ -13,7 +13,7 @@ badd +344 lab6/Especular.js
 badd +2 lab6/Especular.html
 badd +73 lab6.2/luzdosol.html
 badd +1 lab6/PhongMaterial.html
-badd +1 lab6/PhongMaterial.js
+badd +331 lab6/PhongMaterial.js
 argglobal
 silent! argdel *
 argadd lab6.2/luzdosol.js
@@ -39,15 +39,15 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 267 - ((29 * winheight(0) + 28) / 56)
+let s:l = 158 - ((40 * winheight(0) + 28) / 56)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-267
-normal! 037|
+158
+normal! 035|
 wincmd w
 argglobal
-edit lab6/PhongMaterial.js
+edit lab6.2/luzdosol.html
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -57,12 +57,12 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 459 - ((27 * winheight(0) + 28) / 56)
+let s:l = 117 - ((53 * winheight(0) + 28) / 56)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-459
-normal! 0
+117
+normal! 07|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 105 + 105) / 211)
 exe 'vert 2resize ' . ((&columns * 105 + 105) / 211)
