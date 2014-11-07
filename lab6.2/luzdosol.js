@@ -15,7 +15,16 @@ var groupModel		= null;
 var cameraPos 		= new Vector3();
 var cameraLook 		= new Vector3();
 var cameraUp 		= new Vector3();
+var lightPos		= new Vector3();
 var FOVy		= 75.0;
+
+//	ANIMATE ATTRS
+var RotSun		= 0.0;
+var RotMoon		= 0.0;	
+var RotEarth 		= 0.0;
+var transEarth		= 0.5;
+var deltaTrans		= 0.01;
+
 
 
 function initGL( canvas ) {
@@ -39,14 +48,30 @@ function webGLStart( ){
 	gl 	= initGL( canvas );
 	
 	shaderLuzdoSol = initShaders( "LuzDoSol", gl );
-	shaderLuzdoSol.vPositionAttr = gl.getAttribLocation( shaderLuzdoSol, "aVertexPosition" );
-	shaderLuzdoSol.vColor	= gl.getUniformLocation( shaderLuzdoSol, "aVertexColor" );
+	shaderLuzdoSol.aVertexPosition 	= gl.getAttribLocation( shaderLuzdoSol, "aVertexPosition" );
+	shaderLuzdoSol.aVNorm		= gl.getAttribLocation( shaderLuzdoSol, "aVNorm" );
+	shaderLuzdoSol.aVertexColor	= gl.getUniformLocation( shaderLuzdoSol, "aVertexColor" );
+	shaderLuzdoSol.uModelMat	= gl.getUniformLocation( shaderLuzdoSol, "uModelMat" );
+	shaderLuzdoSol.uViewMat		= gl.getUniformLocation( shaderLuzdoSol, "uViewMat" );
+	shaderLuzdoSol.uProjMat		= gl.getUniformLocation( shaderLuzdoSol, "uProjMat" );
 
 	if( !shaderLuzdoSol ) {
 		alert( "Could not initialize shader LuzDoSol" );
 	}else{
- 		if( shaderLuzdoSol.vPositionAttr < 0 || shaderLuzdoSol.vColor < 0 ){
+ 		if( shaderLuzdoSol.aVertexPosition < 0 ){
 			alert( "ERROR: getAttribLocation shaderLuzdoSol" );
+		}
+ 		if( !shaderLuzdoSol.aVertexColor || !shaderLuzdoSol.uModelMat
+			|| !shaderLuzdoSol.uProjMat ){
+			alert( "ERROR: getUniformLocation shaderLuzdoSol" );
+		}
+	}
+
+	shaderLuzdoSol.uLightPos 	= gl.getUniformLocation( shaderLuzdoSol, "uLightPos" );
+
+	if( !shaderLuzdoSol ){
+		if( !shaderLuzdoSol.uLightPos ){
+			alert(" ERROR: getUniformLocation ");
 		}
 	}
 
@@ -77,6 +102,7 @@ function webGLStart( ){
 
 		if( model.length > 0 ){
 			drawScene( );
+			animate( );
 		}else{
 			requestAnimationFrame( tick, canvas );
 		}
@@ -120,27 +146,78 @@ function drawScene( ) {
 		cameraLook.elements[2],
 		cameraUp.elements[0],
 		cameraUp.elements[1],
-		cameraUp.elements[2]
+		cameraUp.elements[2],
+		
+		lightPos.elements[0],
+		lightPos.elements[1],
+		lightPos.elements[2]
 	);
 
 	projMat.setPerspective( FOVy, gl.viewportWidth / gl.viewportHeight, 0.1, 25.0 );
-
-	modelMat.setScale( 0.8, 0.8, 0.8 );
-	mvpMat.set( projMat ).multiply( viewMat ).multiply( modelMat );
 	
+	gl.uniform3fv( shaderLuzdoSol.uLightPos, lightPos.elements );
+
 	//Desenha Sol
+	modelMat.setScale( 0.8, 0.8, 0.8 );
+
 	color[0] = 1.0;
 	color[1] = 1.0;
 	color[2] = 0.0;
 
-	gl.uniform3fv( shaderLuzdoSol.vColor, color );
+	drawCosmicBody( modelMat, viewMat, projMat, color );		
+
+	//Desenha Terra
+	modelMat.setIdentity();
+	modelMat.scale( 0.4, 0.4, 0.4 );
+	modelMat.rotate( RotEarth, 0, 1, 0 );
+	modelMat.translate( 2, 0, 0 );
+
+	color[0] = 0.2;
+	color[1] = 0.2;
+	color[2] = 0.8;
 	
+	drawCosmicBody( modelMat, viewMat, projMat, color );		
+
+	//Desenha Lua
+	modelMat.rotate( RotMoon, 0, 1, 0 );
+	modelMat.translate( 0.6, 0, 0 );
+	modelMat.scale( 0.5, 0.5, 0.5 );
+
+	color[0] = 0.5;
+	color[1] = 0.5;
+	color[2] = 0.5;
+	
+	drawCosmicBody( modelMat, viewMat, projMat, color );		
+		
+}
+
+function drawCosmicBody( model, view, proj, color ){
+	gl.uniformMatrix4fv( shaderLuzdoSol.uModelMat, false, model.elements );	
+	gl.uniformMatrix4fv( shaderLuzdoSol.uViewMat, false, view.elements );
+	gl.uniformMatrix4fv( shaderLuzdoSol.uProjMat, false, proj.elements );
+
+	gl.uniform3fv( shaderLuzdoSol.aVertexColor, color );
+
 	for( var o = 0; o < model.length; o++ ){
 		draw( model[o], shaderLuzdoSol, gl.TRIANGLES );
 	}
 	
-		
-		
+}
+
+
+// ********************************************************
+// ********************************************************
+function animate() {
+	requestAnimationFrame(animate, canvas);
+	transEarth += deltaTrans;
+	if (transEarth > 1.9)
+		deltaTrans *= -1.0;
+	else
+		if (transEarth < 0.5)
+			deltaTrans *= -1.0; 
+	RotEarth += 2;
+	RotMoon += 5;
+	drawScene(); 
 }
 
 // ********************************************************
@@ -187,6 +264,14 @@ function onReadComplete ( gl ) {
 		}else{
 			alert( "ERROR: Can't create indexBuffer " );
 		}
+
+		groupModel.normalBuffer = gl.createBuffer( );
+		if( groupModel.normalBuffer ){
+			gl.bindBuffer( gl.ARRAY_BUFFER, groupModel.normalBuffer );
+			gl.bufferData( gl.ARRAY_BUFFER, g_drawingInfo.normals[o], gl.STATIC_DRAW );
+		}else{
+			alert( "ERROR: Can't create normal buffer " );
+		}
 		
 		groupModel.numObjects = g_drawingInfo.indices[o].length;
 		model.push( groupModel );
@@ -200,8 +285,8 @@ function onReadComplete ( gl ) {
 function draw( o, shader, primitive ){
 	if( o.vertexBuffer != null ){
 		gl.bindBuffer( gl.ARRAY_BUFFER, o.vertexBuffer );
-		gl.vertexAttribPointer( shader.vPositionAttr, 3, gl.FLOAT, false, 0, 0 );
-		gl.enableVertexAttribArray( shader.vPositionAttr );
+		gl.vertexAttribPointer( shader.aVertexPosition, 3, gl.FLOAT, false, 0, 0 );
+		gl.enableVertexAttribArray( shader.aVertexPosition );
 	}else{
 		alert( "o.vertxBuffer == null" );
 		return;

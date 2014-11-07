@@ -7,14 +7,24 @@
 
 	<script id="LuzDoSol-vs" type="x-shader/x-vertex">
 		attribute vec3 aVertexPosition;
-
+		attribute vec3 aVNorm;
+		
+		uniform mat4 uModelMat;
+		uniform mat4 uViewMat;
+		uniform mat4 uProjMat;
 		uniform vec3 aVertexColor;
+
+		uniform vec3 uLightPos;
 		
 		varying vec4 vColor;
 
 		void main( void ) {
 	
-			gl_Position = vec4( aVertexPosition.xyz, 1.0 );
+			gl_Position 	= uProjMat * uViewMat * uModelMat * vec4( aVertexPosition.xyz, 1.0 );
+
+			vec3 vPosW 	= ( uModelMat * vec4( aVertexPosition, 1.0 ) ).xyz;
+
+			vec3 vL 	= normalize( uLightPos - vPosW );
 			
 			vColor	= vec4( aVertexColor, 1.0 );
 		}	
