@@ -8,7 +8,7 @@ var texture		= null;
 // ********************************************************
 function initGL(canvas) {
 	
-	var gl =  canvas.getContext("experimental-webgl2") || canvas.getContext("webgl") || canvas.getContext("experimental-webgl");canvas.getContext("webgl");
+	var gl = canvas.getContext("webgl");
 	if (!gl) {
 		return (null);
 		}
@@ -102,7 +102,6 @@ function drawScene(o) {
 	gl.bindTexture(gl.TEXTURE_2D, texture);
 
 	gl.uniform1i(shader.uSampler, 0);
-	gl.uniform2f(shader.uPixelSize, 1.0 / gl.viewportWidth, 1.0 / gl.viewportHeight);
 		
 	if (o.vertexBuffer != null) {
 		gl.bindBuffer(gl.ARRAY_BUFFER, o.vertexBuffer);
@@ -140,11 +139,6 @@ function initTexture() {
 		text.innerHTML 		= 	"Imagem :" + image.src + 
 								"<br/> Dimensao = " + image.height +
 								" <i>x</i> " + image.width;		
-								
-		canvas.width 		= image.width;
-		canvas.height 		= image.height;
-		gl.viewportWidth 	= canvas.width;
-		gl.viewportHeight 	= canvas.height;
 		
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
@@ -153,8 +147,7 @@ function initTexture() {
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		drawScene(baseImage);
 		}
-	image.crossOrigin = '';
-	image.src = "lena.png";
+	image.src = "../images/lena.png";
 }
 
 // ********************************************************
@@ -176,14 +169,12 @@ function webGLStart() {
 		}
 
 	shader.vPositionAttr 	= gl.getAttribLocation(shaderProgram, "aVertexPosition");
-	shader.vTexAttr			= gl.getAttribLocation(shaderProgram, "aVertexTexture");
+	shader.vTexAttr 		= gl.getAttribLocation(shaderProgram, "aVertexTexture");
 	shader.uSampler	 		= gl.getUniformLocation(shader, "uSampler");
-	shader.uPixelSize		= gl.getUniformLocation(shader, "uPixelSize");
 
-	if ( 	(shader.vPositionAttr < 0) 	||
-			(shader.vTexAttr < 0) 		||
-			(shader.uSampler < 0) 		|| 
-			(shader.PixelSizeUniform < 0) ) {
+	if ( 	(shader.vPositionAttr < 0) ||
+			(shader.vTexAttr < 0) ||
+			(shader.uSampler < 0) ) {
 		alert("Shader attribute ou uniform nao localizado!");
 		return;
 		}

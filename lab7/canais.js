@@ -8,7 +8,7 @@ var texture		= null;
 // ********************************************************
 function initGL(canvas) {
 	
-	var gl =  canvas.getContext("experimental-webgl2") || canvas.getContext("webgl") || canvas.getContext("experimental-webgl");canvas.getContext("webgl");
+	var gl = canvas.getContext("webgl");
 	if (!gl) {
 		return (null);
 		}
@@ -85,10 +85,27 @@ var vTex = new Array;
 
 // ********************************************************
 // ********************************************************
-function drawScene(o) {
-	
-	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-	gl.clear(gl.COLOR_BUFFER_BIT);
+function drawScene(o, channel) {
+
+	switch( channel ){
+
+		case 0: {
+			gl.viewport(0, 0, 500, 500);
+			break;
+		}	
+		case 1: {
+			gl.viewport(500, 0, 500, 500);
+			break;
+		}	
+		case 2: {
+			gl.viewport(0, 500, 500, 500);
+			break;
+		}	
+		case 3: {
+			gl.viewport(500, 500, 500, 500);
+			break;
+		}	
+	}
 	
     try {
     	gl.useProgram(shader);
@@ -102,7 +119,7 @@ function drawScene(o) {
 	gl.bindTexture(gl.TEXTURE_2D, texture);
 
 	gl.uniform1i(shader.uSampler, 0);
-	gl.uniform2f(shader.uPixelSize, 1.0 / gl.viewportWidth, 1.0 / gl.viewportHeight);
+	gl.uniform1i(shader.uChannel, channel);
 		
 	if (o.vertexBuffer != null) {
 		gl.bindBuffer(gl.ARRAY_BUFFER, o.vertexBuffer);
@@ -140,21 +157,20 @@ function initTexture() {
 		text.innerHTML 		= 	"Imagem :" + image.src + 
 								"<br/> Dimensao = " + image.height +
 								" <i>x</i> " + image.width;		
-								
-		canvas.width 		= image.width;
-		canvas.height 		= image.height;
-		gl.viewportWidth 	= canvas.width;
-		gl.viewportHeight 	= canvas.height;
 		
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.bindTexture(gl.TEXTURE_2D, null);
-		drawScene(baseImage);
+
+		gl.clear(gl.COLOR_BUFFER_BIT);
+		drawScene(baseImage, 0);
+		drawScene(baseImage, 1);
+		drawScene(baseImage, 2);
+		drawScene(baseImage, 3);
 		}
-	image.crossOrigin = '';
-	image.src = "lena.png";
+	image.src = "../images/lena.png";
 }
 
 // ********************************************************
@@ -176,14 +192,13 @@ function webGLStart() {
 		}
 
 	shader.vPositionAttr 	= gl.getAttribLocation(shaderProgram, "aVertexPosition");
-	shader.vTexAttr			= gl.getAttribLocation(shaderProgram, "aVertexTexture");
+	shader.vTexAttr 		= gl.getAttribLocation(shaderProgram, "aVertexTexture");
 	shader.uSampler	 		= gl.getUniformLocation(shader, "uSampler");
-	shader.uPixelSize		= gl.getUniformLocation(shader, "uPixelSize");
+	shader.uChannel	 		= gl.getUniformLocation(shader, "uChannel");
 
-	if ( 	(shader.vPositionAttr < 0) 	||
-			(shader.vTexAttr < 0) 		||
-			(shader.uSampler < 0) 		|| 
-			(shader.PixelSizeUniform < 0) ) {
+	if ( 	(shader.vPositionAttr < 0) ||
+			(shader.vTexAttr < 0) ||
+			(shader.uSampler < 0) ) {
 		alert("Shader attribute ou uniform nao localizado!");
 		return;
 		}
