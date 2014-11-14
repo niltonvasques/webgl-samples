@@ -1,0 +1,69 @@
+<html>
+
+<head>
+<title>MATA65 - Computação Gráfica</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec2 aVertexTexture;
+		
+	varying vec2 vTextureCoord;
+	
+	void main(void) {
+		gl_Position = vec4(aVertexPosition, 1.0);
+		vTextureCoord = aVertexTexture;
+	}
+</script>
+
+<script id="shader-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	uniform sampler2D uSampler;
+	
+	varying vec2 vTextureCoord;
+		
+	void main(void) {	
+		float r  	= texture2D(uSampler, vTextureCoord)[0];
+		float g		= texture2D(uSampler, vTextureCoord)[1];
+		float b		= texture2D(uSampler, vTextureCoord)[2];
+		float a		= texture2D(uSampler, vTextureCoord)[3];
+	
+		float gamma 	= 0.3;
+
+		float nR	= pow( r, gamma );
+		float nG	= pow( g, gamma );
+		float nB	= pow( b, gamma );
+		
+		vec4 negativo = vec4( nR, nG, nB, a );
+
+		gl_FragColor = negativo;
+	}
+</script>
+
+<script type="text/javascript" src="../lib/webgl-utils.js"></script>
+<script type="text/javascript" src="../lib/shaders.js"></script>
+<script type="text/javascript" src="image.js"></script>
+
+</head>
+
+<body onload="webGLStart();">
+    <h1>Laboratorio 7</h1><br />
+    <h3>Exercicio.</h3>
+    <div id="output"> </div>
+    <br/>
+    <canvas id="imagem" style="border: none;" width="500" height="500"></canvas>
+    <p>Implemente as seguintes operacoes sobre a imagem:</p>
+    <p>1) Binarizacao</p>
+    <p>2) Conversao para tons de cinza</p>
+    <p>3) Visualizacao dos canais de cores separadamente (no mesmo canvas)</p>
+    <p>4) Negativo colorido</p>
+    <p>5) Negativo tons de cinza</p>
+    <p>6) Escurecimento da imagen</p>
+    <p>7) Clareamento da imagen</p>
+    <p>8) Aumento de contraste da imagen</p>
+    <br/>
+
+</body>
+
+</html>
