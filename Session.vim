@@ -40,12 +40,12 @@ setlocal fml=1
 setlocal fdn=20
 setlocal fen
 silent! normal! zE
-let s:l = 253 - ((30 * winheight(0) + 28) / 56)
+let s:l = 172 - ((0 * winheight(0) + 28) / 56)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-253
-normal! 029|
+172
+normal! 0
 wincmd w
 argglobal
 edit lab6.2/luzdosol.html
