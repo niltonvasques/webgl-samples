@@ -112,46 +112,64 @@ function initBuffers() {
 	gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesColorBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-	sphere = buildSphere(20, 20);
+	sphere = buildSphere(5,5);
 
 	sphereVerticesBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, sphereVerticesBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere), gl.STATIC_DRAW);
 //LINHAS VERTICAIS
-	sphereLong = buildSphereLat(20, 10);
+	//sphereLong = buildSphereLat(5,5);
 
-	sphereVerticesLongBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, sphereVerticesLongBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphereLong), gl.STATIC_DRAW);
+	//sphereVerticesLongBuffer = gl.createBuffer();
+	//gl.bindBuffer(gl.ARRAY_BUFFER, sphereVerticesLongBuffer);
+	//gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphereLong), gl.STATIC_DRAW);
 
 }
 
-// ********************************************************
+Math.sign = Math.sign || function(x) {
+  x = +x; // convert to a number
+  if (x === 0 || isNaN(x)) {
+    return x;
+  }
+  return x > 0 ? 1 : -1;
+}
+
+var n1 = 5.0;
+var n2 = 0.1;
+// *******************************************************
 // ********************************************************
 function buildSphere(np, np2){
 	var vPos = new Array;
 	var angle = np *  (Math.PI / 180.0);
 	var angle2 = np2 *  (Math.PI / 180.0);
 	var r = 1;
+
 	vPos.numItems = 0;
 	vPos.numIntervals = 0;
 	vPos.intervalSize = 0;
 
-	for(theta = 0.0; theta < 2*Math.PI; theta+=angle){
-		for(alfa = 0.0; alfa < Math.PI; alfa+=angle2){
+	for(theta = (-Math.PI / 2.0); theta < (Math.PI / 2.0); theta+=angle){
+		for(alfa = -Math.PI; alfa < Math.PI; alfa+=angle2){
 			var theta2 =  theta;
 			var alfa2 =  alfa;
-			var x = 0.0 + r * Math.cos(theta2) * Math.sin(alfa2);
-			var y = 0.0 + r * Math.sin(theta2) * Math.sin(alfa2);
-			var z = 0.0 + r * Math.cos(alfa2);
+                        var cosTheta = Math.cos(theta2); 
+                        var cosAlpha = Math.cos(alfa2);
+                        var sinAlpha = Math.sin(alfa2);
+                        var sinTheta = Math.sin(theta2);
+			var x = 0.0 + r * Math.sign(cosTheta) * Math.pow(Math.abs(cosTheta), n1) * Math.sign(cosAlpha) * Math.pow(Math.abs(cosAlpha), n2);
+			var y = 0.0 + r * Math.sign(cosTheta) * Math.pow(Math.abs(cosTheta), n1) * Math.sign(sinAlpha) * Math.pow(Math.abs(sinAlpha), n2);
+			var z = 0.0 + r * Math.sign(sinTheta) * Math.pow(Math.abs(sinTheta), n1);
 			vPos.push(x);
 			vPos.push(y);
 			vPos.push(z);
 			vPos.numItems++;
 
-			x = 0.0 + r * Math.cos(theta2 + angle) * Math.sin(alfa2);
-			y = 0.0 + r * Math.sin(theta2 + angle) * Math.sin(alfa2);
-			z = 0.0 + r * Math.cos(alfa2);
+                        var cosThetaAngle = Math.cos(theta2 + angle);
+                        var cosAlphaAngle = Math.cos(alfa2 + angle);
+
+			x = 0.0 + r * Math.sign(cosThetaAngle) * Math.pow(Math.abs(cosThetaAngle), n1) * Math.sign(cosAlpha) * Math.pow(Math.abs(cosAlpha), n2);
+			y = 0.0 + r * Math.sign(cosThetaAngle) * Math.pow(Math.abs(cosThetaAngle), n1) * Math.sign(sinAlpha) * Math.pow(Math.abs(sinAlpha), n2);
+			z = 0.0 + r * Math.sign(sinTheta) * Math.pow(Math.abs(sinTheta), n1);
 			vPos.push(x);
 			vPos.push(y);
 			vPos.push(z);
@@ -178,9 +196,13 @@ function buildSphereLat(np, np2){
 		for(alfa = 0.0; alfa < Math.PI; alfa+=angle2){
 			var theta2 =  theta;
 			var alfa2 =  alfa;
-			var x = 0.0 + r * Math.cos(theta2) * Math.sin(alfa2);
-			var y = 0.0 + r * Math.sin(theta2) * Math.sin(alfa2);
-			var z = 0.0 + r * Math.cos(alfa2);
+                        var cosTheta = Math.cos(theta2); 
+                        var cosAlpha = Math.cos(alfa2);
+                        var sinAlpha = Math.sin(alfa2);
+                        var sinTheta = Math.sin(theta2);
+			var x = 0.0 + r * Math.sign(cosTheta) * Math.pow(Math.abs(cosTheta), n1) * Math.sign(cosAlpha) * Math.pow(Math.abs(cosAlpha), n2);
+			var y = 0.0 + r * Math.sign(cosTheta) * Math.pow(Math.abs(cosTheta), n1) * Math.sign(sinAlpha) * Math.pow(Math.abs(sinAlpha), n2);
+			var z = 0.0 + r * Math.sign(sinTheta) * Math.pow(Math.abs(sinTheta), n1);
 			vPos.push(x);
 			vPos.push(y);
 			vPos.push(z);

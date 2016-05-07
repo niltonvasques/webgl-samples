@@ -1,0 +1,115 @@
+<html>
+
+<head>
+<title>MATA65 - Computacao Grafica</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<script id="simple-vs" type="x-shader/x-vertex">
+	attribute vec3 aVPosition;
+	attribute vec3 aVColor;
+	
+	uniform mat4 uMVPMat;
+		
+	varying vec3 vColor;
+		
+	void main(void) {
+		
+ 		gl_Position = uMVPMat * vec4(aVPosition.xyz, 1.0);
+ 		
+		vColor = aVColor;
+	}
+
+</script>
+
+<script id="simple-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	varying vec3 	vColor;
+	
+	void main(void) {
+		
+		gl_FragColor = vec4(vColor, 1.0);
+	}
+</script>
+
+<script id="normalMapping-vs" type="x-shader/x-vertex">
+	attribute vec3 aVPosition;
+	attribute vec3 aVNorm;
+	attribute vec2 aVTexCoord;
+	
+	uniform mat4 uModelMat;
+	uniform mat4 uMVPMat;
+	uniform mat4 uNormMat;
+	
+	varying vec3 vPosW;	
+	varying vec3 vNormalW;
+	varying vec2 vTextCoord;	
+		
+	void main(void) {
+		
+ 		gl_Position = uMVPMat * vec4(aVPosition.xyz, 1.0);
+ 		
+ 		vPosW = (uModelMat * vec4(aVPosition, 1.0)).xyz;
+		vTextCoord = aVTexCoord;
+		
+		vNormalW 	= normalize(vec3(uNormMat * vec4(aVNorm, 1.0)));
+	}
+
+</script>
+
+<script id="normalMapping-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	varying vec3 vPosW;	
+	varying vec3 vNormalW;
+	varying vec2 vTextCoord;	
+			
+	uniform sampler2D uTexture;
+	uniform sampler2D uNormalMap;
+	
+	uniform vec3 uCamPos;
+	uniform vec3 uLPos;
+	uniform vec4 uLColor;
+	uniform vec4 uMatAmb;
+	uniform vec4 uMatDif;
+	uniform vec4 uMatSpec;
+	uniform float uExpSpec;
+	
+	void main(void) {
+		vec4 nMap 		= texture2D(uNormalMap, vTextCoord);
+		vec3 vNM 		= normalize(nMap.xyz);
+		
+		vec4 ambient 	= uLColor * uMatAmb;
+	
+		vec4 texel 		= texture2D(uTexture, vTextCoord);
+		vec3 vL 		= normalize(uLPos - vPosW);
+		float teta 		= max(dot(vL, vNM), 0.0);			
+		vec4 diffuse 	= uLColor * texel * teta;	
+
+		vec3 vV 		= normalize(uCamPos - vPosW);
+		vec3 vR 		= normalize(reflect(-vL, vNM));
+		float omega 	= max(dot(vV, vR), 0.0);
+		vec4 specular 	= uLColor * uMatSpec * pow(omega,uExpSpec);	
+		
+		gl_FragColor 	= clamp(ambient + diffuse + specular, 0.0, 1.0);
+	}
+</script>
+
+<script type="text/javascript" src="../lib/webgl-utils.js"></script>
+<script type="text/javascript" src="../lib/cuon-matrix.js"></script>
+<script type="text/javascript" src="../lib/shaders.js"></script>
+<script type="text/javascript" src="../lib/myOBJParser.js"></script>
+<script type="text/javascript" src="../lib/MaterialParser.js"></script>
+<script type="text/javascript" src="normalMap.js"></script>
+
+</head>
+
+<body onload="webGLStart();">
+    <h1>Laboratorio 9</h1><br />
+    <p>Mapeamento de Textura - NormalMap.</p>
+
+    <canvas id="normalMapping" style="border: none;" width="400" height="400"></canvas>
+
+</body>
+
+</html>

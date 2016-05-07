@@ -1,0 +1,118 @@
+<html>
+
+<head>
+<title>MATA65 - Computacao Grafica</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<script id="simple-vs" type="x-shader/x-vertex">
+	attribute vec3 aVPosition;
+	attribute vec3 aVColor;
+	
+	uniform mat4 uMVPMat;
+		
+	varying vec3 vColor;
+		
+	void main(void) {
+		
+ 		gl_Position = uMVPMat * vec4(aVPosition.xyz, 1.0);
+ 		
+		vColor = aVColor;
+	}
+
+</script>
+
+<script id="simple-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	varying vec3 	vColor;
+	
+	void main(void) {
+		
+		gl_FragColor = vec4(vColor, 1.0);
+	}
+</script>
+
+<script id="texture-vs" type="x-shader/x-vertex">
+	attribute vec3 aVPosition;
+	attribute vec3 aVNorm;
+	attribute vec2 aVTexCoord;
+	
+	uniform mat4 uModelMat;
+	uniform mat4 uViewMat;
+	uniform mat4 uProjMat;
+	uniform mat4 uNormMat;
+	
+	varying vec3 vNormal;
+	varying vec3 vPosW;	
+	varying vec2 vTextCoord;	
+		
+	void main(void) {
+		
+ 		gl_Position = uProjMat * uViewMat * uModelMat * vec4(aVPosition.xyz, 1.0);
+ 		
+ 		vPosW = (uModelMat * vec4(aVPosition, 1.0)).xyz;
+		vTextCoord = aVTexCoord;
+		
+		vNormal = normalize(vec3(uNormMat * vec4(aVNorm, 1.0)));
+	}
+
+</script>
+
+<script id="texture-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	varying vec3 vNormal;
+	varying vec3 vPosW;	
+	varying vec2 vTextCoord;	
+			
+	uniform sampler2D uSampler0;
+	
+	uniform vec3 uCamPos;
+	uniform vec3 uLPos;
+	uniform vec4 uLColor;
+	uniform vec4 uMatAmb;
+	uniform vec4 uMatDif;
+	uniform vec4 uMatSpec;
+	uniform float uExpSpec;
+	
+	void main(void) {
+		vec4 texel = texture2D(uSampler0, vTextCoord);
+		
+		vec4 ambient = vec4(uLColor.rgb * uMatAmb.rgb, uMatAmb.a);
+	
+		vec3 vL = normalize(uLPos - vPosW);
+		float teta = max(dot(vL, vNormal), 0.0);
+				
+		vec4 diffuse = vec4(uLColor.rgb * texel.rgb * teta, texel.a);	
+
+		vec3 vV = normalize(uCamPos - vPosW);
+		vec3 vR = normalize(reflect(-vL, vNormal));
+		float omega = max(dot(vV, vR), 0.0);
+		vec4 specular = vec4(uLColor.rgb * uMatSpec.rgb * pow(omega,uExpSpec), uMatSpec.a);	
+		
+		gl_FragColor = clamp(ambient + diffuse + specular, 0.0, 1.0);
+	}
+</script>
+
+<script type="text/javascript" src="../lib/webgl-utils.js"></script>
+<script type="text/javascript" src="../lib/cuon-matrix.js"></script>
+<script type="text/javascript" src="../lib/shaders.js"></script>
+<script type="text/javascript" src="../lib/myOBJParser.js"></script>
+<script type="text/javascript" src="../lib/MaterialParser.js"></script>
+<script type="text/javascript" src="exercicio1.js"></script>
+
+</head>
+
+<body onload="webGLStart();">
+    <h1>Laboratorio 9</h1>
+    <h2>Exercicio 1 - Multiplas texturas.</h2>
+    <p>O modelo Earth possui 2 modelos com texturas diferentes,</p>
+    <p>sua componente difusa, que representa a cor dos ocenanos e dos continentes,</p>
+    <p>e a camada de nuvens que circunda a Terra. Tecle A e veja as duas camadas</p>
+    <p>Modifique o shader de forma que as duas camadas possam ser visiveis ao mesmo tempo.</p>
+
+    <canvas id="texture" style="border: none;" width="400" height="400"></canvas>
+
+</body>
+
+</html>
